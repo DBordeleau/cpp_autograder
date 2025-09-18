@@ -1,4 +1,4 @@
-OBJECTS = assignment.o autograder.o date.o submission.o mark.o tests.o grader.o main.o
+OBJECTS = assignment.o autograder.o date.o submission.o mark.o tests.o grader.o config.o main.o
 
 autograder: $(OBJECTS)
 	clang++ -std=c++20 $(OBJECTS) -o autograder
@@ -23,6 +23,9 @@ tests.o: tests.cpp tests.h
 
 grader.o: grader.cpp grader.h assignment.h tests.h
 	clang++ -std=c++20 -c grader.cpp
+
+config.o: config.cpp config.h assignment.h tests.h
+	clang++ -std=c++20 -c config.cpp
 
 main.o: main.cpp grader.h assignment.h
 	clang++ -std=c++20 -c main.cpp

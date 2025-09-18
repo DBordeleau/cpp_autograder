@@ -5,6 +5,7 @@ runProgram assumed the compiled binary is named the same as the assignment name.
 */
 
 #include "tests.h"
+#include "config.h"
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
@@ -12,30 +13,48 @@ runProgram assumed the compiled binary is named the same as the assignment name.
 #include <sys/wait.h>
 #include <signal.h>
 
-// Main function to run tests based on assignment name
-std::string runTest(const std::string& assignmentName, const std::string& directory) {
-    if (assignmentName == "A1") {
-        return testAssignment1(directory);
-    } else if (assignmentName == "Assignment 2") {
-        return testAssignment2(directory);
-    } else {
-        std::cout << "No test defined for assignment " << assignmentName << std::endl;
-        return "NO_TEST_DEFINED";
-    }
+// Global variable to store test configurations
+static std::map<std::string, TestConfig> testConfigs;
+
+void loadTestConfigs(const std::map<std::string, TestConfig>& configs) {
+    testConfigs = configs;
 }
 
-// Individual test functions for each assignment
+std::string runTest(const std::string& assignmentName, const std::string& directory) {
+    // Look for a test configuration for this assignment
+    for (const auto& pair : testConfigs) {
+        const TestConfig& config = pair.second;
+        if (config.assignmentName == assignmentName) {
+            return runTestFromConfig(config, directory);
+        }
+    }
+    
+    std::cout << "No test defined for assignment " << assignmentName << std::endl;
+    return "NO_TEST_DEFINED";
+}
+
+std::string runTestFromConfig(const TestConfig& config, const std::string& directory) {
+    std::string input = "";
+    
+    // Combine all inputs with newlines
+    for (int i = 0; i < config.inputCount; ++i) {
+        input += config.inputs[i] + "\n";
+    }
+    
+    return runProgram(directory, config.assignmentName, input);
+}
+
+/*
 std::string testAssignment1(const std::string& directory) {
-    // Test that inputs "Frodo" and expects "Hello Frodo!" output
     std::string input = "Frodo\n";
     return runProgram(directory, "A1", input);
 }
 
 std::string testAssignment2(const std::string& directory) {
-    // Example test with specific input
-    std::string input = "5\n10\n";  // Simulate user entering "5" then "10"
+    std::string input = "5\n10\n";
     return runProgram(directory, "A2", input);
 }
+*/
 
 // Utility function to run a program in a given directory with optional input and capture its output.
 std::string runProgram(const std::string& directory, const std::string& assignmentName, const std::string& input) {

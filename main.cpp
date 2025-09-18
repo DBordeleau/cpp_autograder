@@ -29,46 +29,44 @@ If you need to provide input for an assignment, you can define specific tests fo
 #include <fstream>
 #include "assignment.h"
 #include "grader.h"
+#include "config.h"
+#include "tests.h"
 
 namespace fs = std::filesystem;
-
-const int MAX_ASSIGNMENTS = 10;
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         std::cout << "Usage: " << argv[0] << " <filename of .zip file> or <filepath to directory of .zip files>" << std::endl;
         return 1;
-
     }
+    
+    // Load configuration
+    ConfigParser parser;
+    if (!parser.loadConfig("config.txt")) {
+        std::cout << "Error: Could not load configuration file" << std::endl;
+        return 1;
+    }
+    
+    // Create assignments from configuration using arrays
     Assignment assignments[MAX_ASSIGNMENTS];
-    int assignmentCount = 0;
+    int assignmentCount = parser.createAssignments(assignments, MAX_ASSIGNMENTS);
     
-    // Add autograders
-    std::string items[] = {"Hello Frodo!"};
-    int values[] = {100};
-    Autograder autograder1(items, values, 1);
-
-    // Add more autograders as needed
-    // std::string items2[] = {"Test case 1", "Test case
-    // int values2[] = {50, 50};
-    // Autograder autograder2(items2, values2, 2);
+    if (assignmentCount == 0) {
+        std::cout << "Error: No valid assignments found in configuration" << std::endl;
+        return 1;
+    }
     
-    // Add assignments
-    assignments[assignmentCount] = Assignment("A1", "First assignment description", Date(2025, 10, 15), autograder1);
-    assignmentCount++;
+    // Load test configurations
+    loadTestConfigs(parser.getTests());
     
-    // Add more assignments as needed
-    // assignments[assignmentCount] = Assignment("Assignment 2", "Second assignment", Date(2025, 10, 22), autograder2);
-    // assignmentCount++;
+    std::cout << "Loaded " << assignmentCount << " assignments from configuration" << std::endl;
     
     std::string inputPath = argv[1];
     
     if (fs::is_regular_file(inputPath) && inputPath.ends_with(".zip")) {
-        // Single zip file
         std::cout << "Processing single zip file: " << inputPath << std::endl;
         processZipFile(inputPath, assignments, assignmentCount);
     } else if (fs::is_directory(inputPath)) {
-        // Directory with multiple zip files
         std::cout << "Processing directory: " << inputPath << std::endl;
         for (const auto& entry : fs::directory_iterator(inputPath)) {
             if (entry.is_regular_file() && entry.path().extension() == ".zip") {
@@ -83,7 +81,6 @@ int main(int argc, char* argv[]) {
     // Grade all submissions and print results
     std::cout << "\n=== GRADING RESULTS ===" << std::endl;
     
-    // Create output file
     std::ofstream outputFile("autograder_output.txt");
     if (outputFile.is_open()) {
         outputFile << "=== AUTOGRADER RESULTS ===" << std::endl;

@@ -11,6 +11,8 @@ Date::Date(int year, int month, int day) {
     this->day = day;
 }
 
+// Note that submissions will not be accepted if the submission date is after the due date.
+// The default date is set to January 1, 1901 to avoid accidental acceptance of late submissions.
 Date::Date() {
     year = 1901;
     month = 1;

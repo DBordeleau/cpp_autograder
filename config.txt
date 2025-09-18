@@ -1,0 +1,11 @@
+### Assignments
+
+A1 = {"Description", "2025-10-31", "autograder1"}
+
+### Autograders
+
+autograder1 = {["Hello Frodo!"], [100]}
+
+### Tests
+
+Test1 = {"A1", ["Frodo"]}
