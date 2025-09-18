@@ -22,6 +22,7 @@ public:
     void setMark(const Mark& newMark);
     void print();
     void printMark();
+    void printMark(std::ofstream& outputFile);
 };
 
 #endif

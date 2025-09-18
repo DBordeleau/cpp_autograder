@@ -133,3 +133,12 @@ void Assignment::gradeAllSubmissions() {
         submissions[i]->printMark();
     }
 }
+
+void Assignment::gradeAllSubmissions(std::ofstream& outputFile) {
+    for (int i = 0; i < submissionCount; ++i) {
+        Mark newMark;
+        autograder.grade(submissions[i]->getOutput(), newMark);
+        submissions[i]->setMark(newMark);
+        submissions[i]->printMark(outputFile);
+    }
+}

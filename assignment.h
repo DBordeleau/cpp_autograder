@@ -29,6 +29,7 @@ public:
     void printAllSubmissions();
     void printSubmissionByStudent(int studentId);
     void gradeAllSubmissions();
+    void gradeAllSubmissions(std::ofstream& outputFile); // saves results to file
 };
 
 #endif

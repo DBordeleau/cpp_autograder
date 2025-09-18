@@ -5,6 +5,7 @@ For every string in the autograder's outputItems array that is found in the subm
 */
 
 #include "submission.h"
+#include <fstream>
 
 Submission::Submission(int studentId, const std::string& assignmentName, const std::string& submissionOutput, const Date& submissionDate, const Mark& mark) {
     this->studentId = studentId;
@@ -52,4 +53,14 @@ void Submission::setMark(const Mark& newMark) {
 
 void Submission::printMark() {
     std::cout << "Assignment " << assignmentName << " by student " << studentId << " Graded: " << mark.print() << std::endl;
+}
+
+void Submission::printMark(std::ofstream& outputFile) {
+    std::string output = "Assignment " + assignmentName + " by student " + std::to_string(studentId) + " Graded: " + mark.print();
+    
+    std::cout << output << std::endl;
+    
+    if (outputFile.is_open()) {
+        outputFile << output << std::endl;
+    }
 }

@@ -26,6 +26,7 @@ If you need to provide input for an assignment, you can define specific tests fo
 #include <iostream>
 #include <string>
 #include <filesystem>
+#include <fstream>
 #include "assignment.h"
 #include "grader.h"
 
@@ -81,8 +82,23 @@ int main(int argc, char* argv[]) {
     
     // Grade all submissions and print results
     std::cout << "\n=== GRADING RESULTS ===" << std::endl;
-    for (int i = 0; i < assignmentCount; ++i) {
-        assignments[i].gradeAllSubmissions();
+    
+    // Create output file
+    std::ofstream outputFile("autograder_output.txt");
+    if (outputFile.is_open()) {
+        outputFile << "=== AUTOGRADER RESULTS ===" << std::endl;
+        
+        for (int i = 0; i < assignmentCount; ++i) {
+            assignments[i].gradeAllSubmissions(outputFile);
+        }
+        
+        outputFile.close();
+        std::cout << "\nResults saved to autograder_output.txt" << std::endl;
+    } else {
+        std::cout << "Warning: Could not create output file, printing to console only" << std::endl;
+        for (int i = 0; i < assignmentCount; ++i) {
+            assignments[i].gradeAllSubmissions();
+        }
     }
     
     return 0;
