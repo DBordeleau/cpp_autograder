@@ -234,7 +234,9 @@ void ConfigParser::parseTest(const std::string& name, const std::string& value) 
             config.assignmentName = assignmentName;
             config.inputCount = parseStringList(inputList, config.inputs, MAX_INPUT_ITEMS);
             
+            // ✅ ADD THIS LINE - Actually store the test!
             tests[name] = config;
+            
             std::cout << "Loaded test: " << name << std::endl;
             std::cout << "  Assignment: '" << config.assignmentName << "'" << std::endl;
             std::cout << "  Inputs: " << config.inputCount << " items" << std::endl;

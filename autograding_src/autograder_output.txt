@@ -1,0 +1,2 @@
+=== AUTOGRADER RESULTS ===
+Assignment A2 by student 123456779 Graded: 100/100

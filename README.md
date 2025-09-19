@@ -2,46 +2,80 @@
 
 A flexible and extensible autograding system for C++ programming assignments. This tool automatically extracts, compiles, runs, and grades student submissions based on expected output criteria defined in a simple configuration file.
 
+**Two ways to use the autograder:**
+- **Command-line interface** for batch processing multiple submissions
+- **Web interface** for students to submit individual file uploads with real-time results
+
 ## Features
 
 - **Automated grading** of C++ programming assignments
 - **Flexible test configuration** with custom input/output scenarios
 - **Support for multiple assignments** with different grading criteria
-- **Batch processing** of multiple submissions across multiple assignments
+- **Batch processing (via command-line)** of multiple submissions across multiple assignments
+- **FastAPI Web interface** for students to upload their submissions
 
 ## Requirements
 
+### Core Autograder
 - C++20 compatible compiler (clang++ or g++)
 - `make` utility
 - `unzip` command-line tool
 - macOS or Linux environment
 
+### Web Interface (Optional)
+- Python 3.7+
+- FastAPI
+- Uvicorn
+
 ## Installation
 
-1. Clone the repository:
+### 1. Clone the repository
 ```bash
 git clone https://github.com/DBordeleau/cpp_autograder
+cd cpp_autograder
 ```
 
-2. Compile the autograder:
+### 2. Compile the autograder
 ```bash
+cd autograding_src
 make
+cd ..
 ```
-- You will need to modify the makefile if not using clang
+*Note: You may will to modify the Makefile if not using clang*
+
+### 3. Install Python dependencies for web interface (optional)
+```bash
+pip install -r requirements.txt
+```
 
 ## Usage
 
-### Basic Usage
+### Option 1: Command-Line Interface
 
-Grade a single submission:
-```bash
-./autograder path/to/submission.zip
-```
+For batch processing multiple submissions:
 
-Grade multiple submissions in a directory:
 ```bash
+cd autograding_src
 ./autograder path/to/submissions/directory/
 ```
+
+### Option 2: Web Interface
+
+For easy single-file uploads with real-time results:
+
+#### Start the web server:
+```bash
+cd web
+python app.py
+```
+
+#### Access the interface:
+Open your browser to `http://localhost:8000`
+
+- **Drag & drop** or click to upload `.zip` files
+- **Real-time grading** with immediate results
+- **Clean output** showing only final grades
+- **Detailed logging** in your server console
 
 ### Submission Format
 
@@ -52,7 +86,7 @@ Student submissions must follow this naming convention:
 
 Examples:
 - `123456_A1.zip` - Student ID 123456 submitting assignment A1
-- `789012_Assignment2.zip` - Student ID 789012 submitting Assignment2
+- `789012_Assignment2.zip` - Student ID 789012 submitting assignment Assignment2
 
 ### Submission Requirements
 
@@ -83,7 +117,7 @@ A2 = {"Second Assignment", "2025-11-15", "autograder2"}
 Format: `AssignmentName = {"Description", "YYYY-MM-DD", "autograder_name"}`
 
 #### Autograders Section
-Define what outputs to look for and their point values. The item at outputItems[i] is worth gradeValue[i] points:
+Define what outputs to look for and their point values. The item at outputItems[i] is worth gradeValue[i]:
 ```
 ### Autograders
 
@@ -91,7 +125,7 @@ autograder1 = {["Hello World!", "Goodbye!"], [50, 50]}
 autograder2 = {["Result: 42"], [100]}
 ```
 
-Format: `AutograderName = {["output1", "output2"], [points1, points2]}`
+Format: `AutograderName = {["output1", "output2"], [points_for_output1, points_for_output2]}`
 
 #### Tests Section
 Define test inputs for each assignment:
@@ -123,21 +157,30 @@ Test1 = {"A1", ["Frodo"]}
 Test2 = {"A2", ["10", "5"]}
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 autograder/
-├── main.cpp              # Main entry point
-├── config.txt            # Configuration file (assignments, autograders, tests)
-├── config.h/cpp          # Configuration parser
-├── grader.h/cpp          # Core grading utilities (zip extraction, compilation)
-├── tests.h/cpp           # Test routing and program execution
-├── assignment.h/cpp      # Assignment class and submission management
-├── autograder.h/cpp      # Grading logic and criteria matching
-├── submission.h/cpp      # Individual submission representation
-├── mark.h/cpp            # Individual grade representation
-├── date.h/cpp            # Date handling for due dates and submission dates
-├── Makefile              # Build configuration
+├── autograding_src/      # Core autograder (C++)
+│   ├── main.cpp          # Main entry point
+│   ├── config.txt        # Configuration file
+│   ├── config.h/cpp      # Configuration parser
+│   ├── grader.h/cpp      # Core grading utilities
+│   ├── tests.h/cpp       # Test routing and execution
+│   ├── assignment.h/cpp  # Assignment management
+│   ├── autograder.h/cpp  # Grading logic based on expected output
+│   ├── submission.h/cpp  # Submission representation
+│   ├── mark.h/cpp        # Grade representation (gradeValue / outOf)
+│   ├── date.h/cpp        # Date object
+│   └── Makefile          # Build configuration
+├── web/                  # Web interface (Python/FastAPI)
+│   ├── app.py            # FastAPI web server
+│   ├── templates/        # HTML Files (currently 1 page)
+│   │   └── index.html    # Main upload page
+│   └── static/           # CSS and assets
+│       └── style.css     # Styling
+├── submissions/          # Uploaded submissions storage
+├── requirements.txt      # Python dependencies
 └── README.md             # You are here
 ```
 
@@ -171,7 +214,9 @@ Custom test scenarios for each assignment:
 
 ## Example Workflow
 
-1. **Configure the autograder** by editing `config.txt`:
+### Using Command-Line Interface
+
+1. **Configure the autograder** by editing `autograding_src/config.txt`:
    ```
    ### Assignments
    A1 = {"Hello Program", "2025-10-31", "autograder1"}
@@ -183,40 +228,41 @@ Custom test scenarios for each assignment:
    Test1 = {"A1", ["Frodo"]}
    ```
 
-2. **Student submits** `123456_A1.zip` containing:
+2. **Store student submissions** in the /submissions directory in the format: `<student_ID>_<assignment_name>.zip`
+
+3. **Batch process submissions**:
+   ```bash
+   cd autograding_src
+   ./autograder ../submissions/
    ```
-   main.cpp
-   Makefile
+
+4. **View results** saved in `autograder_output.txt`
+
+### Using Web Interface
+
+1. **Start the web server**:
+   ```bash
+   cd web
+   python app.py
    ```
-   - Store student submissions in the same directory
-   - Run the autograder with the path to this directory as the only argument
 
-3. **Autograder processes**:
-   - Loads configuration from `config.txt`
-   - Extracts zip to temporary directory
-   - Runs `make` to compile code
-   - Executes `./A1` with test input "Frodo"
-   - Captures program output
+2. **Students visit** `http://localhost:8000`
 
-4. **Grading occurs**:
-   - Searches output for "Hello Frodo!"
-   - Awards 100 points if found, 0 if not
-   - Generates final grade
+3. **Upload and grade**:
+   - Student drags `123456_A1.zip` to upload area
+   - Clicks "Grade Assignment"
+   - Sees result immediately: "Final grade: 100/100"
 
-5. **Results displayed and saved**:
-   ```
-   Assignment A1 by student 123456 Marked: 100/100
-   ```
-   - Results are both displayed in console and saved to `autograder_output.txt`
+### Processing Details
 
-## Configuration Tips
-
-- **Test your configuration** by running the autograder on sample submissions
-- **Use descriptive assignment names** that match your course structure
-- **Multiple test inputs** are joined with newlines automatically
-- **Date format** must be "YYYY-MM-DD" for due dates
-- **Output matching** is case-sensitive and looks for exact substring matches
+- **Loads configuration** from `config.txt`
+- **Extracts zip** to temporary directory
+- **Compiles code** using student's Makefile
+- **Executes program** with associated test input
+- **Captures output** and searches for output defined by the autograder
+- **Awards points** based on matches found
+- **Displays results** in front-end with detailed logging in the console
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.
