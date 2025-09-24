@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Tests | C++ Autograder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .nav-links {
+            margin: 20px 0;
+        }
+        .nav-links a {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-right: 10px;
+            display: inline-block;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-group textarea {
+            height: 100px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn-warning { background-color: #ffc107; color: black; }
+        .tests-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .tests-table th, .tests-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .tests-table th {
+            background-color: #f8f9fa;
+        }
+        .json-display {
+            max-width: 200px;
+            max-height: 60px;
+            overflow: auto;
+            font-family: monospace;
+            font-size: 12px;
+            background-color: #f1f3f4;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 10px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover { color: black; }
+        .json-help {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Manage Tests</h2>
+        <div>
+            <span>{{ admin.name }} (Admin)</span>
+            <a href="/logout" class="btn btn-danger">Logout</a>
+        </div>
+    </div>
+
+    <div class="nav-links">
+        <a href="/admin">Dashboard</a>
+        <a href="/admin/students">View Students</a>
+        <a href="/admin/assignments">Manage Assignments</a>
+        <a href="/admin/autograders">Manage Autograders</a>
+        <a href="/admin/tests">Manage Tests</a>
+        <a href="/reload-config">Reload Config</a>
+    </div>
+
+    {% set query_params = request.query_params %}
+    {% if query_params.get('success') %}
+    <div class="alert alert-success">{{ query_params.get('success') }}</div>
+    {% endif %}
+    {% if query_params.get('error') %}
+    <div class="alert alert-danger">{{ query_params.get('error') }}</div>
+    {% endif %}
+
+    <div class="card">
+        <h3>Create New Test</h3>
+        <div class="json-help">
+            <strong>Input Data Format:</strong> JSON array of strings<br>
+            Example: ["input1", "input2", "input3"] for a test that passes 3 inputs to the program
+        </div>
+        <form method="post" action="/admin/tests/create">
+            <div class="form-group">
+                <label for="test_id">Test ID:</label>
+                <input type="text" id="test_id" name="test_id" required placeholder="e.g., test1">
+            </div>
+            <div class="form-group">
+                <label for="assignment_id">Assignment:</label>
+                <select id="assignment_id" name="assignment_id" required>
+                    <option value="">Select an assignment</option>
+                    {% for assignment in assignments %}
+                    <option value="{{ assignment.assignment_id }}">{{ assignment.assignment_id }} - {{ assignment.description[:50] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="input_data">Input Data (JSON Array):</label>
+                <textarea id="input_data" name="input_data" required placeholder='["input1", "input2", "input3"]'></textarea>
+            </div>
+            <button type="submit" class="btn btn-success">Create Test</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>Existing Tests</h3>
+        {% if tests %}
+        <table class="tests-table">
+            <thead>
+                <tr>
+                    <th>Test ID</th>
+                    <th>Assignment</th>
+                    <th>Input Data</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for test in tests %}
+                <tr>
+                    <td>{{ test.test_id }}</td>
+                    <td>{{ test.assignment_id }}</td>
+                    <td>
+                        <div class="json-display">{{ test.inputs_json }}</div>
+                    </td>
+                    <td>
+                        <button class="btn btn-warning edit-test-btn" 
+                                data-test-id="{{ test.test_id }}" 
+                                data-assignment-id="{{ test.assignment_id }}" 
+                                data-input-data="{{ test.inputs_json|e }}">Edit</button>
+                        <form method="post" action="/admin/tests/{{ test.test_id }}/delete" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this test?')">
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No tests found. Create your first test above.</p>
+        {% endif %}
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>Edit Test</h3>
+            <form id="editForm" method="post">
+                <div class="form-group">
+                    <label for="edit_assignment_id">Assignment:</label>
+                    <select id="edit_assignment_id" name="assignment_id" required>
+                        {% for assignment in assignments %}
+                        <option value="{{ assignment.assignment_id }}">{{ assignment.assignment_id }} - {{ assignment.description[:50] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit_input_data">Input Data (JSON Array):</label>
+                    <textarea id="edit_input_data" name="input_data" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-success">Update Test</button>
+                <button type="button" class="btn btn-primary" onclick="closeModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Add event listeners after DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            const editButtons = document.querySelectorAll('.edit-test-btn');
+            editButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const testId = this.getAttribute('data-test-id');
+                    const assignmentId = this.getAttribute('data-assignment-id');
+                    const inputData = this.getAttribute('data-input-data');
+                    
+                    document.getElementById('edit_assignment_id').value = assignmentId;
+                    document.getElementById('edit_input_data').value = inputData;
+                    document.getElementById('editForm').action = '/admin/tests/' + testId + '/update';
+                    document.getElementById('editModal').style.display = 'block';
+                });
+            });
+        });
+
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('editModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,14 +1,14 @@
 ### Assignments
 
-A1 = {"Hello world assignment", "2025-10-31", "autograder1"}
-A2 = {"Sum/Product assignment", "2025-12-25", "autograder2"}
+Assignment_1 = {"Write a program that accepts a string as user input and outputs 'Hello <input>!'", "2025-10-31", "autograder1"}
+Assignment_2 = {"Write a program that prompts the user for two integers. Output the sum and product of the two integers.", "2025-12-25", "autograder2"}
 
 ### Autograders
 
 autograder1 = {["Hello Frodo!"], [100]}
-autograder2 = {["Sum: 15", "Product: 50"], [50, 50]}
+autograder2 = {["15", "50"], [50, 50]}
 
 ### Tests
 
-Test1 = {"A1", ["Frodo"]}
-Test2 = {"A2", ["5", "10"]}
+Test1 = {"Assignment_1", ["Frodo"]}
+Test2 = {"Assignment_2", ["5", "10"]}

@@ -11,6 +11,8 @@ private:
 public:
     Mark();
     Mark(int markValue, int outOf);
+    int getMark() const;
+    int getOutOf() const;
     bool setMark(int markValue, int outOf);
     std::string print();
 };

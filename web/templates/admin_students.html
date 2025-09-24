@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Student | C++ Autograder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logout-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+        .admin-badge {
+            background-color: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .nav-links {
+            margin: 20px 0;
+        }
+        .nav-links a {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-right: 10px;
+            display: inline-block;
+        }
+        .nav-links a:hover {
+            background-color: #0056b3;
+        }
+        .content-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .students-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .students-table th,
+        .students-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .students-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        .students-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        .grade-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        .grade-excellent {
+            background-color: #28a745;
+        }
+        .grade-good {
+            background-color: #17a2b8;
+        }
+        .grade-fair {
+            background-color: #ffc107;
+            color: #333;
+        }
+        .grade-poor {
+            background-color: #dc3545;
+        }
+        .grade-none {
+            background-color: #6c757d;
+        }
+        .submissions-count {
+            background-color: #007bff;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+        .student-details {
+            display: none;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .toggle-details {
+            background: none;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .toggle-details:hover {
+            color: #0056b3;
+        }
+        .submission-item {
+            background: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .no-students {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>Student Management</h1>
+            <p>Manage students and view their submissions</p>
+        </div>
+        <div class="user-info">
+            <span>Welcome, {{ admin.name }}</span>
+            <span class="admin-badge">Admin</span>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </div>
+
+    <div class="nav-links">
+        <a href="/admin">Dashboard</a>
+        <a href="/admin/students" style="background-color: #0056b3;">View Students</a>
+        <a href="/admin/assignments">Manage Assignments</a>
+        <a href="/admin/autograders">Manage Autograders</a>
+        <a href="/admin/tests">Manage Tests</a>
+        <a href="/reload-config">Reload Config</a>
+    </div>
+
+    <div class="content-card">
+        <h2>Students Overview</h2>
+        
+        {% if student_data %}
+        <table class="students-table">
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Submissions</th>
+                    <th>Average Grade</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in student_data %}
+                <tr>
+                    <td><strong>{{ data.student.user_id }}</strong></td>
+                    <td>{{ data.student.name }}</td>
+                    <td>
+                        {{ data.submissions|length }}
+                        {% if data.submissions|length > 0 %}
+                        <span class="submissions-count">{{ data.submissions|length }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% set grades = data.submissions|selectattr('grade')|map(attribute='grade')|list %}
+                        {% if grades %}
+                            {% set avg_grade = (grades|sum / grades|length)|round(1) %}
+                            {% if avg_grade >= 90 %}
+                                <span class="grade-badge grade-excellent">{{ avg_grade }}%</span>
+                            {% elif avg_grade >= 80 %}
+                                <span class="grade-badge grade-good">{{ avg_grade }}%</span>
+                            {% elif avg_grade >= 70 %}
+                                <span class="grade-badge grade-fair">{{ avg_grade }}%</span>
+                            {% elif avg_grade >= 60 %}
+                                <span class="grade-badge grade-poor">{{ avg_grade }}%</span>
+                            {% else %}
+                                <span class="grade-badge grade-poor">{{ avg_grade }}%</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="grade-badge grade-none">No grades</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="toggle-details" onclick="toggleDetails('{{ data.student.user_id }}')">
+                            View Details
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="5">
+                        <div id="details-{{ data.student.user_id }}" class="student-details">
+                            <h4>Submission History for {{ data.student.name }}</h4>
+                            {% if data.submissions %}
+                                {% for submission in data.submissions %}
+                                <div class="submission-item">
+                                    <strong>{{ submission.assignment_id }}</strong>
+                                    <span style="float: right;">
+                                        {% if submission.grade %}
+                                            Grade: {{ submission.grade }}%
+                                        {% else %}
+                                            Grade: Not graded
+                                        {% endif %}
+                                    </span>
+                                    <br>
+                                    <small>Submitted: {{ submission.submission_time.strftime('%Y-%m-%d %H:%M:%S') if submission.submission_time else 'Unknown' }}</small>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p style="color: #6c757d; font-style: italic;">No submissions yet</p>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="no-students">
+            <h3>No Students Found</h3>
+            <p>No students have registered yet.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function toggleDetails(studentId) {
+            const detailsDiv = document.getElementById('details-' + studentId);
+            const button = event.target;
+            
+            if (detailsDiv.style.display === 'none' || detailsDiv.style.display === '') {
+                detailsDiv.style.display = 'block';
+                button.textContent = 'Hide Details';
+            } else {
+                detailsDiv.style.display = 'none';
+                button.textContent = 'View Details';
+            }
+        }
+    </script>
+</body>
+</html>

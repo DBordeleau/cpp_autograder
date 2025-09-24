@@ -16,6 +16,14 @@ Mark::Mark() {
     outOf = 100;
 }
 
+int Mark::getMark() const {
+    return markValue;
+}
+
+int Mark::getOutOf() const {
+    return outOf;
+}
+
 // Set the mark value and out of value.
 // Return true if successful, false if invalid values.
 bool Mark::setMark(int markValue, int outOf) {

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ assignment.assignment_id }} | C++ Autograder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logout-btn, .back-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .back-btn {
+            background-color: #6c757d;
+        }
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+        .back-btn:hover {
+            background-color: #5a6268;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .assignment-meta {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .assignment-meta p {
+            margin: 5px 0;
+        }
+        .description {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            border-left: 4px solid #007bff;
+        }
+        .upload-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .current-grade {
+            background-color: #d4edda;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+        .current-grade h3 {
+            margin: 0 0 10px 0;
+            color: #155724;
+        }
+        .grade-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #155724;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+        .loading {
+            text-align: center;
+            color: #6c757d;
+        }
+        .submission-info {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a href="/" class="back-btn">← Back to Assignments</a>
+            <h2>{{ assignment.assignment_id }}</h2>
+        </div>
+        <div class="user-info">
+            <span>Welcome, {{ student.name }}</span>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>{{ assignment.assignment_id }}</h1>
+        
+        <div class="assignment-meta">
+            {% if assignment.due_date %}
+            <p><strong>Due Date:</strong> {{ assignment.due_date }}</p>
+            {% endif %}
+            <p><strong>Student:</strong> {{ student.name }} ({{ student.student_id }})</p>
+        </div>
+
+        <div class="description">
+            <h3>Assignment Description</h3>
+            <p>{{ assignment.description }}</p>
+        </div>
+
+        {% if submission %}
+        <div class="current-grade">
+            <h3>Current Grade</h3>
+            <div class="grade-display">{{ "%.0f"|format(submission.grade) }}%</div>
+            <p><small>Last submitted: {{ submission.submission_time.strftime('%Y-%m-%d %H:%M') if submission.submission_time else 'Unknown' }}</small></p>
+        </div>
+        {% endif %}
+
+        <div class="upload-section">
+            <h3>Submit Your Work</h3>
+            {% if submission %}
+            <div class="submission-info">
+                <p><strong>Note:</strong> You already have a submission with {{ "%.0f"|format(submission.grade) }}% grade. 
+                   Submitting a new file will only update your grade if the new score is higher.</p>
+            </div>
+            {% endif %}
+            
+            <form id="uploadForm" enctype="multipart/form-data">
+                <input type="hidden" name="assignment_id" value="{{ assignment.assignment_id }}">
+                
+                <div class="form-group">
+                    <label for="file">Choose ZIP file:</label>
+                    <input type="file" id="file" name="file" accept=".zip" required>
+                </div>
+                
+                <button type="submit" id="submitBtn">Upload and Grade</button>
+            </form>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const resultsDiv = document.getElementById('results');
+            const formData = new FormData(e.target);
+            
+            // Disable submit button and show loading
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Grading...';
+            resultsDiv.innerHTML = '<div class="loading">Grading your submission, please wait...</div>';
+            
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    let html = '<div class="results success"><h3>Grading Complete!</h3>';
+                    html += `<p><strong>File:</strong> ${result.filename}</p>`;
+                    
+                    if (result.results.grading_results && result.results.grading_results.length > 0) {
+                        result.results.grading_results.forEach(grade => {
+                            html += `<p><strong>${grade.display_text}</strong></p>`;
+                        });
+                    }
+                    html += '<p><em>Page will refresh in 3 seconds to show updated grade...</em></p>';
+                    html += '</div>';
+                    resultsDiv.innerHTML = html;
+                    
+                    // Refresh the page after 3 seconds to show updated grade
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
+                } else {
+                    resultsDiv.innerHTML = `<div class="results error"><h3>Grading Failed</h3><p>${result.results.error_message || 'Unknown error occurred'}</p></div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="results error"><h3>Error</h3><p>Failed to upload file: ${error.message}</p></div>`;
+            } finally {
+                // Re-enable submit button if not successful (successful ones will reload page)
+                if (!resultsDiv.innerHTML.includes('success')) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Upload and Grade';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

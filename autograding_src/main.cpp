@@ -1,102 +1,158 @@
 /*
-Compilation: Run `make` in the terminal to compile the program.
-Execution: Run the compiled binary with a zip file or directory of zip files to be graded as the only argument
-
-This project is configured by default so that programs to be graded must be contained in 
-zip files named in the format <student_id>_<assignment_name>.zip
-For example: 123456_A1.zip for student ID 123456 submitting assignment A1
-
-The zip file should contain a makefile and all required dependencies to compile the code.
-The binary produced by the makefile must be named the same as the assignment name to be graded.
-
-This main file is where you define assignments and their autograder criteria.
-Autograders are defined by specifying expected output strings and the points associated with each string.
-For example: if an assignment has 2 test cases worth 50 points each, you would define the autograder like this:
-std::string items[] = {"Test case 1 output", "Test case 2 output"};
-int values[] = {50, 50};
-Autograder autograder1(items, values, 2);
-
-You can then create an assignment using this autograder:
-assignments[assignmentCount] = Assignment("Assignment Name", "Assignment description", Date(2025, 10, 15), autograder1);
-assignmentCount++;
-
-If you need to provide input for an assignment, you can define specific tests for each assignment in tests.cpp and tests.h
+Main autograder program.
+Extracts, compiles, runs, and grades student C++ submissions
 */
 
 #include <iostream>
-#include <string>
 #include <filesystem>
-#include <fstream>
-#include "assignment.h"
+#include <sqlite3.h>
 #include "grader.h"
-#include "config.h"
 #include "tests.h"
+#include "autograder.h"
+#include "mark.h"
 
 namespace fs = std::filesystem;
 
+// Get autograder and test info from database
+std::string getAutograderForAssignment(const std::string& assignmentName) {
+    sqlite3* db;
+    std::string dbPath = "../data/database.db";
+    
+    int rc = sqlite3_open(dbPath.c_str(), &db);
+    if (rc) {
+        std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
+        return "";
+    }
+    
+    const char* sql = "SELECT autograder FROM assignments WHERE assignment_id = ?";
+    sqlite3_stmt* stmt;
+    
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        std::cerr << "SQL prepare error: " << sqlite3_errmsg(db) << std::endl;
+        sqlite3_close(db);
+        return "";
+    }
+    
+    sqlite3_bind_text(stmt, 1, assignmentName.c_str(), -1, SQLITE_STATIC);
+    
+    std::string autograderName = "";
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        autograderName = (char*)sqlite3_column_text(stmt, 0);
+    }
+    
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+    
+    return autograderName;
+}
+
+bool getTestInputs(const std::string& assignmentName, std::string inputs[], int& inputCount) {
+    sqlite3* db;
+    std::string dbPath = "../data/database.db";
+    
+    int rc = sqlite3_open(dbPath.c_str(), &db);
+    if (rc) {
+        std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
+        return false;
+    }
+    
+    const char* sql = "SELECT input_data FROM tests WHERE assignment_id = ?";
+    sqlite3_stmt* stmt;
+    
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    sqlite3_bind_text(stmt, 1, assignmentName.c_str(), -1, SQLITE_STATIC);
+    
+    inputCount = 0;
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        const char* json = (const char*)sqlite3_column_text(stmt, 0);
+        
+        std::string jsonStr(json);
+        size_t pos = 0;
+        while (pos < jsonStr.length() && inputCount < 10) {
+            size_t start = jsonStr.find('"', pos);
+            if (start == std::string::npos) break;
+            
+            size_t end = jsonStr.find('"', start + 1);
+            if (end == std::string::npos) break;
+            
+            inputs[inputCount] = jsonStr.substr(start + 1, end - start - 1);
+            inputCount++;
+            pos = end + 1;
+        }
+    }
+    
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+    
+    return inputCount > 0;
+}
+
 int main(int argc, char* argv[]) {
     if (argc != 2) {
-        std::cout << "Usage: " << argv[0] << " <filename of .zip file> or <filepath to directory of .zip files>" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <zip_file_path>" << std::endl;
         return 1;
     }
     
-    // Load configuration
-    ConfigParser parser;
-    if (!parser.loadConfig("config.txt")) {
-        std::cout << "Error: Could not load configuration file" << std::endl;
+    std::string zipPath = argv[1];
+    
+    // Parse filename to get assignment info
+    std::string filename = fs::path(zipPath).filename().string();
+    auto [studentId, assignmentName] = parseFilename(filename);
+    
+    if (studentId == -1 || assignmentName.empty()) {
+        std::cout << "Invalid filename format: " << filename << std::endl;
         return 1;
     }
     
-    // Create assignments from configuration using arrays
-    Assignment assignments[MAX_ASSIGNMENTS];
-    int assignmentCount = parser.createAssignments(assignments, MAX_ASSIGNMENTS);
+    std::cout << "Processing single zip file: " << zipPath << std::endl;
     
-    if (assignmentCount == 0) {
-        std::cout << "Error: No valid assignments found in configuration" << std::endl;
+    std::string autograderName = getAutograderForAssignment(assignmentName);
+    if (autograderName.empty()) {
+        std::cout << "Assignment " << assignmentName << " not found in database" << std::endl;
         return 1;
     }
     
-    // Load test configurations
-    loadTestConfigs(parser.getTests());
+    std::string testInputs[10];
+    int inputCount;
+    if (!getTestInputs(assignmentName, testInputs, inputCount)) {
+        std::cout << "No test defined for assignment " << assignmentName << std::endl;
+        return 1;
+    }
     
-    std::cout << "Loaded " << assignmentCount << " assignments from configuration" << std::endl;
+    // create temporary directory for extraction
+    std::string tempDir = "/tmp/grading_" + std::to_string(studentId) + "_" + assignmentName;
+    std::cout << "Creating temp directory: " << tempDir << std::endl;
+    fs::create_directories(tempDir);
     
-    std::string inputPath = argv[1];
+    // unzip and compile
+    if (!unzipFile(zipPath, tempDir)) {
+        std::cout << "Failed to unzip: " << filename << std::endl;
+        fs::remove_all(tempDir);
+        return 1;
+    }
     
-    if (fs::is_regular_file(inputPath) && inputPath.ends_with(".zip")) {
-        std::cout << "Processing single zip file: " << inputPath << std::endl;
-        processZipFile(inputPath, assignments, assignmentCount);
-    } else if (fs::is_directory(inputPath)) {
-        std::cout << "Processing directory: " << inputPath << std::endl;
-        for (const auto& entry : fs::directory_iterator(inputPath)) {
-            if (entry.is_regular_file() && entry.path().extension() == ".zip") {
-                processZipFile(entry.path().string(), assignments, assignmentCount);
-            }
+    std::string output = "";
+    if (compileCode(tempDir)) {
+        // Build input string from database inputs
+        std::string input = "";
+        for (int i = 0; i < inputCount; ++i) {
+            input += testInputs[i] + "\n";
         }
+        output = runProgram(tempDir, assignmentName, input);
     } else {
-        std::cout << "Invalid input: " << inputPath << " (must be a zip file or directory)" << std::endl;
-        return 1;
+        output = "COMPILATION_FAILED";
     }
     
-    // Grade all submissions and print results
-    std::cout << "\n=== GRADING RESULTS ===" << std::endl;
+    Autograder autograder(autograderName);
+    Mark mark;
+    autograder.grade(output, mark);
     
-    std::ofstream outputFile("autograder_output.txt");
-    if (outputFile.is_open()) {
-        outputFile << "=== AUTOGRADER RESULTS ===" << std::endl;
-        
-        for (int i = 0; i < assignmentCount; ++i) {
-            assignments[i].gradeAllSubmissions(outputFile);
-        }
-        
-        outputFile.close();
-        std::cout << "\nResults saved to autograder_output.txt" << std::endl;
-    } else {
-        std::cout << "Warning: Could not create output file, printing to console only" << std::endl;
-        for (int i = 0; i < assignmentCount; ++i) {
-            assignments[i].gradeAllSubmissions();
-        }
-    }
+    std::cout << "Assignment " << assignmentName << " by student " << studentId 
+              << " Graded: " << mark.getMark() << "/" << mark.getOutOf() << std::endl;
+    
+    // Clean up
+    fs::remove_all(tempDir);
     
     return 0;
 }

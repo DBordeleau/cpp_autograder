@@ -3,222 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C++ Autograder</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <title>Student Dashboard | C++ Autograder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logout-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .assignments-list {
+            margin-top: 20px;
+        }
+        .assignment {
+            background-color: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+        .assignment:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            text-decoration: none;
+            color: inherit;
+        }
+        .assignment-info {
+            flex-grow: 1;
+        }
+        .assignment-info h3 {
+            margin: 0 0 5px 0;
+            color: #007bff;
+            font-size: 1.2em;
+        }
+        .assignment-info .due-date {
+            margin: 0;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        .assignment-grade {
+            text-align: right;
+            min-width: 120px;
+        }
+        .grade-badge {
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .grade-high {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .grade-medium {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .grade-low {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .grade-none {
+            background-color: #e9ecef;
+            color: #6c757d;
+        }
+        .overdue {
+            border-left-color: #dc3545;
+        }
+        .overdue h3 {
+            color: #dc3545;
+        }
+        .overdue .due-date {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .assignment-arrow {
+            margin-left: 10px;
+            color: #007bff;
+            font-size: 1.2em;
+        }
+        .welcome-message {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #6c757d;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>C++ Autograder</h1>
-            <p>Upload and autograde C++ Programming Assignments</p>
-        </header>
-
-        <div class="upload-section">
-            <form id="uploadForm" enctype="multipart/form-data">
-                <div class="file-input-wrapper">
-                    <input type="file" id="fileInput" name="file" accept=".zip" required>
-                    <label for="fileInput" class="file-input-label">
-                        <span class="file-icon">📁</span>
-                        <span class="file-text">Choose ZIP file or drag & drop</span>
-                    </label>
-                </div>
-                <button type="submit" id="submitBtn" class="submit-btn">
-                    <span class="btn-text">Grade Assignment</span>
-                    <div class="spinner" style="display: none;"></div>
-                </button>
-            </form>
-        </div>
-
-        <div id="results" class="results-section" style="display: none;">
-            <h2>Grading Results</h2>
-            <div id="resultsContent"></div>
-        </div>
-
-        <div id="error" class="error-section" style="display: none;">
-            <h2>Error</h2>
-            <div id="errorContent"></div>
+    <div class="header">
+        <h2>C++ Autograder</h2>
+        <div class="user-info">
+            <span>Welcome, {{ student.name }}</span>
+            <a href="/logout" class="logout-btn">Logout</a>
         </div>
     </div>
 
-    <script>
-        const uploadForm = document.getElementById('uploadForm');
-        const fileInput = document.getElementById('fileInput');
-        const submitBtn = document.getElementById('submitBtn');
-        const btnText = document.querySelector('.btn-text');
-        const spinner = document.querySelector('.spinner');
-        const results = document.getElementById('results');
-        const resultsContent = document.getElementById('resultsContent');
-        const error = document.getElementById('error');
-        const errorContent = document.getElementById('errorContent');
-
-        fileInput.addEventListener('change', function(e) {
-            const fileName = e.target.files[0]?.name || 'Choose ZIP file or drag & drop';
-            document.querySelector('.file-text').textContent = fileName;
-        });
-
-        uploadForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const file = fileInput.files[0];
-            if (!file) {
-                showError('Please select a file');
-                return;
-            }
-
-            if (!file.name.endsWith('.zip')) {
-                showError('Please upload a .zip file');
-                return;
-            }
-
-            setLoading(true);
-            hideResults();
-            hideError();
-
-            try {
-                const formData = new FormData();
-                formData.append('file', file);
-
-                const response = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    showResults(data);
-                } else {
-                    showError(data.detail || data.results?.error_message || 'Grading failed');
-                }
-            } catch (err) {
-                showError('Network error: ' + err.message);
-            } finally {
-                setLoading(false);
-            }
-        });
-
-        function setLoading(loading) {
-            if (loading) {
-                btnText.style.display = 'none';
-                spinner.style.display = 'inline-block';
-                submitBtn.disabled = true;
-            } else {
-                btnText.style.display = 'inline';
-                spinner.style.display = 'none';
-                submitBtn.disabled = false;
-            }
-        }
-
-        function showResults(data) {
-            results.style.display = 'block';
-            
-            let html = `
-                <div class="result-header">
-                    <h3>📄 ${data.filename}</h3>
-                    <span class="status ${data.results.success ? 'success' : 'failure'}">
-                        ${data.results.success ? 'Success' : 'Error'}
-                    </span>
+    <div class="container">
+        <h1>Your Assignments</h1>
+        <div class="welcome-message">
+            <p>Click on any assignment below to view details and submit your work.</p>
+        </div>
+        
+        <div class="assignments-list">
+            {% for assignment in assignments %}
+            <a href="/assignment/{{ assignment.assignment_id }}" class="assignment {% if assignment.is_overdue %}overdue{% endif %}">
+                <div class="assignment-info">
+                    <h3>{{ assignment.assignment_id }}</h3>
+                    {% if assignment.due_date %}
+                    <p class="due-date">
+                        Due: {{ assignment.due_date }}
+                        {% if assignment.is_overdue %}(OVERDUE){% endif %}
+                    </p>
+                    {% endif %}
                 </div>
-            `;
-
-            if (data.results.grading_results && data.results.grading_results.length > 0) {
-                html += '<div class="grades">';
-                data.results.grading_results.forEach(result => {
-                    const gradeMatch = result.grade.match(/(\d+)\/(\d+)/);
-                    let gradeClass = 'grade';
-                    if (gradeMatch) {
-                        const earned = parseInt(gradeMatch[1]);
-                        const total = parseInt(gradeMatch[2]);
-                        const percentage = (earned / total) * 100;
-                        
-                        if (percentage >= 90) gradeClass = 'grade excellent';
-                        else if (percentage >= 80) gradeClass = 'grade good';
-                        else if (percentage >= 70) gradeClass = 'grade fair';
-                        else if (percentage >= 60) gradeClass = 'grade poor';
-                        else gradeClass = 'grade fail';
-                    }
-                    
-                    html += `
-                        <div class="grade-item">
-                            <div class="grade-info">
-                                <span class="assignment">Assignment: ${result.assignment}</span>
-                                <span class="student">Student ID: ${result.student_id}</span>
-                            </div>
-                            <div class="${gradeClass}">${result.display_text}</div>
-                        </div>
-                    `;
-                });
-                html += '</div>';
-            }
-
-            if (data.results.error_message) {
-                html += `
-                    <div class="error-message">
-                        <strong>Error:</strong> ${escapeHtml(data.results.error_message)}
-                    </div>
-                `;
-            }
-
-            resultsContent.innerHTML = html;
-        }
-
-        function showError(message) {
-            error.style.display = 'block';
-            errorContent.textContent = message;
-        }
-
-        function hideResults() {
-            results.style.display = 'none';
-        }
-
-        function hideError() {
-            error.style.display = 'none';
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Drag and drop functionality
-        const fileInputWrapper = document.querySelector('.file-input-wrapper');
-
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            fileInputWrapper.addEventListener(eventName, preventDefaults, false);
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            fileInputWrapper.addEventListener(eventName, highlight, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            fileInputWrapper.addEventListener(eventName, unhighlight, false);
-        });
-
-        function highlight(e) {
-            fileInputWrapper.classList.add('highlight');
-        }
-
-        function unhighlight(e) {
-            fileInputWrapper.classList.remove('highlight');
-        }
-
-        fileInputWrapper.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            fileInput.files = files;
+                <div class="assignment-grade">
+                    {% if assignment.has_submission %}
+                        {% if assignment.grade >= 80 %}
+                        <span class="grade-badge grade-high">{{ "%.0f"|format(assignment.grade) }}%</span>
+                        {% elif assignment.grade >= 60 %}
+                        <span class="grade-badge grade-medium">{{ "%.0f"|format(assignment.grade) }}%</span>
+                        {% else %}
+                        <span class="grade-badge grade-low">{{ "%.0f"|format(assignment.grade) }}%</span>
+                        {% endif %}
+                    {% else %}
+                    <span class="grade-badge grade-none">Not Submitted</span>
+                    {% endif %}
+                    <span class="assignment-arrow">→</span>
+                </div>
+            </a>
+            {% endfor %}
             
-            const fileName = files[0]?.name || 'Choose ZIP file or drag & drop';
-            document.querySelector('.file-text').textContent = fileName;
-        }
-    </script>
+            {% if not assignments %}
+            <div class="assignment">
+                <div class="assignment-info">
+                    <h3>No assignments available</h3>
+                    <p class="due-date">Check back later for new assignments</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </body>
 </html>

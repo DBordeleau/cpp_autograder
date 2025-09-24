@@ -1,7 +1,16 @@
 OBJECTS = assignment.o autograder.o date.o submission.o mark.o tests.o grader.o config.o main.o
 
+all: autograder config_parser
+
 autograder: $(OBJECTS)
-	clang++ -std=c++20 $(OBJECTS) -o autograder
+	clang++ -std=c++20 $(OBJECTS) -o autograder -lsqlite3
+
+config_parser: config_parser.o date.o
+	clang++ -std=c++20 config_parser.o date.o -o config_parser
+
+# Special rule for config_parser.o with the CONFIG_PARSER_MAIN macro
+config_parser.o: config.cpp config.h
+	clang++ -std=c++20 -DCONFIG_PARSER_MAIN -c config.cpp -o config_parser.o
 
 assignment.o: assignment.cpp assignment.h date.h autograder.h submission.h
 	clang++ -std=c++20 -c assignment.cpp
@@ -31,4 +40,4 @@ main.o: main.cpp grader.h assignment.h
 	clang++ -std=c++20 -c main.cpp
 
 clean:
-	rm -f *.o autograder
+	rm -f *.o autograder config_parser
