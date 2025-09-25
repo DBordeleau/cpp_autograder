@@ -1,0 +1,125 @@
+ body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logout-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .assignments-list {
+            margin-top: 20px;
+        }
+        .assignment {
+            background-color: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+        .assignment:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            text-decoration: none;
+            color: inherit;
+        }
+        .assignment-info {
+            flex-grow: 1;
+        }
+        .assignment-info h3 {
+            margin: 0 0 5px 0;
+            color: #007bff;
+            font-size: 1.2em;
+        }
+        .assignment-info .due-date {
+            margin: 0;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        .assignment-grade {
+            text-align: right;
+            min-width: 120px;
+        }
+        .grade-badge {
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .grade-high {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .grade-medium {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .grade-low {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .grade-none {
+            background-color: #e9ecef;
+            color: #6c757d;
+        }
+        .overdue {
+            border-left-color: #dc3545;
+        }
+        .overdue h3 {
+            color: #dc3545;
+        }
+        .overdue .due-date {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .assignment-arrow {
+            margin-left: 10px;
+            color: #007bff;
+            font-size: 1.2em;
+        }
+        .welcome-message {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #6c757d;
+        }
