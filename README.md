@@ -52,7 +52,7 @@ cd autograding_src
 make
 cd ..
 ```
-*Note: You may need to modify the Makefile if not using clang*
+*Note: You may need to modify the Makefile if not using gcc*
 
 ### 4. Install Python dependencies
 ```bash
@@ -321,9 +321,8 @@ Custom test scenarios for each assignment:
 
 1. **Initial Setup**:
    ```bash
-   # Configure assignments and tests
-   by editing autograding_src/config.txt
-   or by logging in with your admin account and using the dashboard
+   # Configure assignments and tests by editing autograding_src/config.txt
+   # or by logging in with your admin account and using the dashboard
    
    # Start the web server
    python run.py
