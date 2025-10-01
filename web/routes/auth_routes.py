@@ -83,13 +83,13 @@ async def register_page(request: Request):
 @router.post("/register")
 async def register(
     request: Request,
-    user_id: str = Form(...),
+    student_id: str = Form(...),  # Changed from user_id to student_id
     name: str = Form(...),
     password: str = Form(...)
 ):
     db = SessionLocal()
     
-    existing = db.query(Users).filter(Users.user_id == user_id).first()
+    existing = db.query(Users).filter(Users.user_id == student_id).first()  # Use student_id
     if existing:
         db.close()
         return templates.TemplateResponse(
@@ -98,7 +98,7 @@ async def register(
         )
     
     new_user = Users(
-        user_id=user_id,
+        user_id=student_id,  # Use student_id
         name=name,
         password_hash=hash_password(password),
         role="student"
