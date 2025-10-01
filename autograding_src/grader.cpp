@@ -9,6 +9,8 @@ The binary to run after compilation must be named the same as the assignment nam
 #include <iostream>
 #include <filesystem>
 #include <cstdlib>
+#include <unistd.h> 
+#include <fstream>
 
 namespace fs = std::filesystem;
 
@@ -67,13 +69,11 @@ Assignment* findAssignment(Assignment assignments[], int assignmentCount, const 
 }
 
 void processZipFile(const std::string& zipPath, Assignment assignments[], int assignmentCount) {
-    // DEBUG: Check if zip file exists
     std::cout << "Looking for zip file at: " << zipPath << std::endl;
     if (!fs::exists(zipPath)) {
         std::cout << "ERROR: Zip file does not exist!" << std::endl;
         return;
     }
-    std::cout << "Zip file found, size: " << fs::file_size(zipPath) << " bytes" << std::endl;
     
     std::string filename = fs::path(zipPath).filename().string();
     auto [studentId, assignmentName] = parseFilename(filename);
@@ -89,38 +89,45 @@ void processZipFile(const std::string& zipPath, Assignment assignments[], int as
         return;
     }
     
-    // Create temporary directory for extraction
-    std::string tempDir = "/tmp/grading_" + std::to_string(studentId) + "_" + assignmentName;
-    std::cout << "Creating temp directory: " << tempDir << std::endl;
-    fs::create_directories(tempDir);
+    std::string output = runInDocker(zipPath, assignmentName, studentId);
+    Date submissionDate = Date();
     
-    // Unzip the file
-    if (!unzipFile(zipPath, tempDir)) {
-        std::cout << "Failed to unzip: " << filename << std::endl;
-        fs::remove_all(tempDir);
-        return;
-    }
-    
-    std::string output = "";
-    Date submissionDate = Date(); // Using default date for now
-    
-    // Try to compile
-    if (compileCode(tempDir)) {
-        // Compilation successful, run the test for this assignment
-        output = runTest(assignmentName, tempDir);
-        std::cout << "Successfully compiled and ran submission for student " << studentId << std::endl;
-    } else {
-        std::cout << "Compilation failed for student " << studentId << std::endl;
-        output = "COMPILATION_FAILED";
-    }
-    
-    // Add submission to assignment
     if (assignment->addSubmission(studentId, output, submissionDate)) {
         std::cout << "Added submission for student " << studentId << " to assignment " << assignmentName << std::endl;
     } else {
         std::cout << "Failed to add submission for student " << studentId << std::endl;
     }
+}
+
+// Grade inside docker container
+std::string runInDocker(const std::string& zipPath, const std::string& assignmentName, int studentId) {
+    std::string containerName = "grader_" + std::to_string(studentId) + "_" + std::to_string(time(nullptr));
     
-    // Clean up temporary directory
-    fs::remove_all(tempDir);
+    std::string command = "docker run --rm --name " + containerName + 
+                         " --memory=128m --cpus=0.5 --network=none" +
+                         " --read-only --tmpfs /tmp:noexec,nosuid,size=50m" +
+                         " -v \"" + zipPath + ":/input.zip:ro\"" +
+                         " -v \"" + fs::current_path().parent_path().string() + "/data:/data:ro\"" +
+                         " autograder:latest ./autograding_src/main /input.zip";
+    
+    std::cout << "Running Docker command: " << command << std::endl;
+    
+    std::string tempOutputFile = "/tmp/docker_output_" + std::to_string(getpid()) + ".txt";
+    command += " > " + tempOutputFile + " 2>&1";
+    
+    int result = system(command.c_str());
+    
+    std::ifstream file(tempOutputFile);
+    std::string output, line;
+    while (std::getline(file, line)) {
+        output += line + "\n";
+    }
+    file.close();
+    remove(tempOutputFile.c_str());
+    
+    if (result != 0) {
+        output += "\n[DOCKER_EXECUTION_ERROR: Exit code " + std::to_string(result) + "]";
+    }
+    
+    return output;
 }

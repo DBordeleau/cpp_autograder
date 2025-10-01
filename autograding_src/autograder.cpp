@@ -27,7 +27,7 @@ Autograder::Autograder(const std::string& autograderName) {
 
 bool Autograder::loadFromDatabase(const std::string& autograderName) {
     sqlite3* db;
-    std::string dbPath = "../data/database.db";
+    std::string dbPath = "/data/database.db";
     
     int rc = sqlite3_open(dbPath.c_str(), &db);
     if (rc) {

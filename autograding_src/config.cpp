@@ -313,7 +313,7 @@ int main() {
     std::cerr << "DEBUG: Starting config parser..." << std::endl;
     std::cerr << "DEBUG: Attempting to load config.txt..." << std::endl;
     
-    if (!parser.loadConfig("config.txt")) {
+    if (!parser.loadConfig("../config.txt")) {
         std::cerr << "Failed to load config" << std::endl;
         return 1;
     }

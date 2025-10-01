@@ -11,11 +11,12 @@ A full-stack autograding system for C++ programming assignments. This tool autom
 - **Flexible test configuration** with custom input/output scenarios.
 - **Support for multiple assignments** with different grading criteria.
 - **Web Interface** for students to submit assignments and view results. And a separate interface for server admins to view results by student, assignment and to create new assignments and tests.
+- **Docker containerization** protects the rest of the server from malicious submissions.
 
 ## Requirements
 
 ### Core Autograder
-- C++20 compatible compiler (clang++ or g++)
+- C++20 compatible compiler (g++ by default)
 - `make` utility
 - `unzip` command-line tool
 - SQLite3 development libraries
@@ -62,8 +63,7 @@ pip install -r requirements.txt
 
 ### Start the Web Server
 ```bash
-cd web
-python app.py
+python run.py
 ```
 
 The first time the server is started, the system will automatically detect that no admin account exists and prompt you to create one:
@@ -83,15 +83,15 @@ You can now login with username 'admin' and your chosen password.
 **Note**: This admin creation only happens on the very first server startup. Once created, the admin account persists in the database.
 
 ### Access the System
-Open your browser to `http://localhost:8000`
+Open your browser to `http://127.0.0.1:8000`
 
 ### Student Workflow
 
 1. **Create Account**: New students register with their student ID, name, and password
-2. **Login**: Students login with their student ID and password
-3. **View Assignments**: See all available assignments with due dates and current grades
-4. **Submit Work**: Click on an assignment to view details and upload a zip file
-5. **View Results**: Get immediate grading feedback and grade updates
+2. **Login**: Students login with their student ID and password.
+3. **View Assignments**: See all available assignments with due dates and current grades.
+4. **Submit Work**: Click on an assignment to view details and upload a zip file.
+5. **View Results**: Get immediate grading feedback and grade updates.
 
 ### Submission Requirements
 
@@ -106,9 +106,10 @@ Example: For an assignment with the ID "Assignment_1", the Makefile should produ
 
 The system uses SQLite to store all data with the following tables:
 
-### Students
-- `student_id` (Primary Key) - Student's unique identifier
+### Users
+- `user_id` (Primary Key) - Student's unique identifier
 - `name` - Student's full name
+- `role` - Admin/Student
 - `email` - Student's email address
 - `password_hash` - Securely hashed password
 - `created_at` - Account creation timestamp
@@ -217,7 +218,7 @@ Test2 = {"Assignment_2", ["5", "10"]}
 ### Loading Configuration
 
 After editing `config.txt`, reload it into the database by visiting:
-`http://localhost:8000/reload-config`
+`http://127.0.0.1:8000/reload-config`
 
 or restart the web server
 
@@ -227,26 +228,36 @@ or restart the web server
 autograder/
 ├── autograding_src/         # Core autograder (C++)
 │   ├── main.cpp             # Main entry point
-│   ├── config.txt           # Configuration file
-│   ├── config.h/cpp         # Configuration parser
+│   ├── config.h/cpp         # Config.txt parser
 │   ├── grader.h/cpp         # Core grading utilities
 │   ├── tests.h/cpp          # Test routing and execution
-│   ├── assignment.h/cpp     # Assignment management
+│   ├── assignment.h/cpp     # Assignment representation
 │   ├── autograder.h/cpp     # Grading logic based on expected output
 │   ├── submission.h/cpp     # Submission representation
 │   ├── mark.h/cpp           # Grade representation (gradeValue / outOf)
 │   ├── date.h/cpp           # Date object
 │   └── Makefile             # Build configuration
 ├── web/                     # Web interface (Python/FastAPI)
-│   ├── app.py               # FastAPI web server
-│   ├── templates/           # HTML Files
-│   │   │  index.html        # Homepage with links to all available assignments
-│   │   │  login.html        # Page for student and admin to login
-│   │   │  register.html     # Account creation page for students
-│   │   └── assignment.html  # Page with assignment details and submission
+│   ├── app.py               # FastAPI application setup
+│   ├── config.py            # Webapp configuration
+│   ├── database.py          # Database models and setup
+│   ├── auth.py              # Auth utilities
+│   ├── dependencies.py      # FastAPI dependencies
+│   ├── config_loader.py     # Config to DB loader
+│   ├── routes/              # Route handlers
+│   │   ├── ...
+│   ├── grading/             # Grading interface
+│   │   ├── ...
+│   ├── templates/           # HTML templates
+│   │   ├── ...
 │   └── static/              # CSS and assets
-│       └── style.css        # Styling
+│       ├── ...
+├── data/                    # Database and data storage
+│   └── database.db          # SQLite database (created on first run)
 ├── submissions/             # Uploaded submissions storage
+├── config.txt               # System configuration file
+├── Dockerfile               # Docker container configuration
+├── run.py                   # Server startup script
 ├── requirements.txt         # Python dependencies
 └── README.md                # You are here
 ```
@@ -315,15 +326,14 @@ Custom test scenarios for each assignment:
    or by logging in with your admin account and using the dashboard
    
    # Start the web server
-   cd ../web
-   python app.py
+   python run.py
    ```
 
 2. **Configuring Autograding**:
    
-   **Web Interface**: Changes are immediate - create, edit, or delete assignments/tests/autograders through admin dashboard.
+   **Web Interface**: Create, edit, or delete assignments/tests/autograders through admin dashboard.
    
-   **Config File**: Edit `config.txt` then visit `http://localhost:8000/reload-config` or restart server
+   **Config File**: Edit `config.txt` then visit `http://127.0.0.1:8000/reload-config` or restart server
 
 3. **Admin Dashboard Features**:
    - **Student Overview**: View all registered students, submission counts, and average grades

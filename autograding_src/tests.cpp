@@ -12,6 +12,14 @@ runProgram assumed the compiled binary is named the same as the assignment name.
 #include <unistd.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
+// Utility function to check if a file exists
+bool fileExists(const std::string& path) {
+    return fs::exists(path);
+}
 
 // Global variable to store test configurations
 static std::map<std::string, TestConfig> testConfigs;
@@ -58,6 +66,32 @@ std::string testAssignment2(const std::string& directory) {
 
 // Utility function to run a program in a given directory with optional input and capture its output.
 std::string runProgram(const std::string& directory, const std::string& assignmentName, const std::string& input) {
+    std::string binaryPath = directory + "/" + assignmentName;
+    
+    // Simplified debug - remove commands that don't exist in container
+    std::cout << "Checking binary: " << binaryPath << std::endl;
+    if (fileExists(binaryPath)) {
+        std::cout << "Binary exists" << std::endl;
+        
+        // Check permissions with ls (which exists in container)
+        std::string lsCommand = "ls -la \"" + binaryPath + "\" | cut -d' ' -f1";
+        system(lsCommand.c_str());
+        std::cout << "Permissions before chmod: ";
+        
+        // Make executable
+        std::string chmodCommand = "chmod +x \"" + binaryPath + "\"";
+        std::cout << "Running: " << chmodCommand << std::endl;
+        int chmodResult = system(chmodCommand.c_str());
+        std::cout << "chmod exit code: " << chmodResult << std::endl;
+        
+        // Check permissions after
+        system(lsCommand.c_str());
+        std::cout << "Permissions after chmod: ";
+    } else {
+        std::cout << "Binary does not exist!" << std::endl;
+        return "[BINARY_NOT_FOUND]";
+    }
+    
     std::string tempOutputFile = "/tmp/output_" + std::to_string(getpid()) + ".txt";
     std::string tempInputFile = "/tmp/input_" + std::to_string(getpid()) + ".txt";
     
