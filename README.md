@@ -49,7 +49,7 @@ sudo apt-get install libsqlite3-dev
 ### 3. Compile the autograder
 ```bash
 cd autograding_src
-make all
+make
 cd ..
 ```
 *Note: You may need to modify the Makefile if not using clang*
