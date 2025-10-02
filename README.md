@@ -13,21 +13,28 @@ A full-stack autograding system for C++ programming assignments. This tool autom
 - **Web Interface** for students to submit assignments and view results. And a separate interface for server admins to view results by student, assignment and to create new assignments and tests.
 - **Docker containerization** protects the rest of the server from malicious submissions.
 
-## Requirements
+### System Requirements
+- **macOS or Linux** environment
+- **C++20 compatible compiler** (clang++ or g++)
+- **Make** utility
+- **Unzip** command-line tool
+- **SQLite3** development libraries
+- **Python 3.7+**
+- **Docker** - For secure, isolated execution of student code
 
-### Core Autograder
-- C++20 compatible compiler (g++ by default)
-- `make` utility
-- `unzip` command-line tool
-- SQLite3 development libraries
-- macOS or Linux environment
+### Installing Docker
 
-### Web Interface
-- Python 3.7+
-- FastAPI
-- SQLAlchemy
-- bcrypt
-- PyJWT 
+**macOS:**
+```bash
+brew install --cask docker
+```
+Or download [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop)
+
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt-get update
+sudo apt-get install docker.io
+```
 
 ## Installation
 
@@ -46,18 +53,105 @@ brew install sqlite3
 sudo apt-get install libsqlite3-dev
 ```
 
-### 3. Compile the autograder
+### 3. Build the Docker image
+The autograder uses Docker to safely execute student code in an isolated environment. You will need to ensure the Docker service is running and build the docker image from the root directory of the project.
+
+```bash
+docker build -t autograder:latest .
+```
+
+This creates a secure container with:
+- C++ compiler (g++)
+- Standard C++ libraries
+- Limited memory (128MB)
+- CPU restrictions (0.5 cores)
+- 60-second timeout per submission
+- No network access
+
+Modify the dockerfile to accomodate the needs of your autograding system.
+
+### 4. Compile the autograder
 ```bash
 cd autograding_src
 make
 cd ..
 ```
-*Note: You may need to modify the Makefile if not using clang*
+*Note: You may need to modify the Makefile if not using gcc*
 
-### 4. Install Python dependencies
+### 5. Install Python dependencies
 ```bash
 pip install -r requirements.txt
 ```
+
+### 6. Configure your assignments
+Edit `config.txt` in the root directory to define your assignments, autograders, and tests. See the Configuration section below for details.
+
+## Configuration
+
+The autograder uses a simple `config.txt` file to define assignments, autograders, and tests. This configuration is automatically loaded into the database when the server is started. The server admin can also create assignments, autograders and tests using the web interface if they prefer to not interact with the config file. Though the config file is the fastest way to create many assignments/tests/autograders at once.
+
+### config.txt Format
+
+The configuration file has three sections:
+
+#### Assignments Section
+Define assignments with their descriptions, due dates, and associated autograders:
+```
+### Assignments
+
+Assignment_1 = {"Write a program that accepts a string as user input and outputs 'Hello <input>!'", "2025-10-31", "autograder1"}
+Assignment_2 = {"Write a program that prompts the user for two integers. Output the sum and product of the two integers.", "2025-12-25", "autograder2"}
+```
+
+Format: `AssignmentName = {"Description/Instructions", "YYYY-MM-DD", "autograder_name"}`
+
+#### Autograders Section
+Define what outputs to look for and their point values. The item at outputItems[i] is worth gradeValue[i]:
+```
+### Autograders
+
+autograder1 = {["Hello Frodo!"], [100]}
+autograder2 = {[15, 50], [50, 50]}
+```
+
+Format: `AutograderName = {["output1", "output2"], [points_for_output1, points_for_output2]}`
+
+#### Tests Section
+Define test inputs for each assignment:
+```
+### Tests
+
+Test1 = {"Assignment_1", ["Frodo"]}
+Test2 = {"Assignment_2", [10, 5]}
+```
+
+Format: `TestName = {"AssignmentName", ["input1", "input2"]}`
+
+### Complete Example config.txt
+
+```
+### Assignments
+
+Assignment_1 = {"Write a program that accepts a string as user input and outputs 'Hello <input>!'", "2025-10-31", "autograder1"}
+Assignment_2 = {"Write a program that prompts the user for two integers. Output the sum and product of the two integers.", "2025-12-25", "autograder2"}
+
+### Autograders
+
+autograder1 = {["Hello Frodo!"], [100]}
+autograder2 = {["15", "50"], [50, 50]}
+
+### Tests
+
+Test1 = {"Assignment_1", ["Frodo"]}
+Test2 = {"Assignment_2", ["5", "10"]}
+```
+
+### Loading Configuration
+
+After editing `config.txt`, reload it into the database by visiting:
+`http://127.0.0.1:8000/reload-config`
+
+or restart the web server
 
 ## Usage
 
@@ -154,73 +248,6 @@ The system automatically creates an admin account on first startup:
 - **Password**: Set during first startup (prompted in terminal)
 - **Access**: Full administrative dashboard with CRUD operations
 - **Interface**: Separate admin interface at `/admin` with comprehensive management tools
-
-## Configuration
-
-The autograder uses a simple `config.txt` file to define assignments, autograders, and tests. This configuration is automatically loaded into the database when the server is started. The server admin can also create assignments, autograders and tests using the web interface if they prefer to not interact with the config file. Though the config file is the fastest way to create many assignments/tests/autograders at once.
-
-### config.txt Format
-
-The configuration file has three sections:
-
-#### Assignments Section
-Define assignments with their descriptions, due dates, and associated autograders:
-```
-### Assignments
-
-Assignment_1 = {"Write a program that accepts a string as user input and outputs 'Hello <input>!'", "2025-10-31", "autograder1"}
-Assignment_2 = {"Write a program that prompts the user for two integers. Output the sum and product of the two integers.", "2025-12-25", "autograder2"}
-```
-
-Format: `AssignmentName = {"Description/Instructions", "YYYY-MM-DD", "autograder_name"}`
-
-#### Autograders Section
-Define what outputs to look for and their point values. The item at outputItems[i] is worth gradeValue[i]:
-```
-### Autograders
-
-autograder1 = {["Hello Frodo!"], [100]}
-autograder2 = {[15, 50], [50, 50]}
-```
-
-Format: `AutograderName = {["output1", "output2"], [points_for_output1, points_for_output2]}`
-
-#### Tests Section
-Define test inputs for each assignment:
-```
-### Tests
-
-Test1 = {"Assignment_1", ["Frodo"]}
-Test2 = {"Assignment_2", [10, 5]}
-```
-
-Format: `TestName = {"AssignmentName", ["input1", "input2"]}`
-
-### Complete Example config.txt
-
-```
-### Assignments
-
-Assignment_1 = {"Write a program that accepts a string as user input and outputs 'Hello <input>!'", "2025-10-31", "autograder1"}
-Assignment_2 = {"Write a program that prompts the user for two integers. Output the sum and product of the two integers.", "2025-12-25", "autograder2"}
-
-### Autograders
-
-autograder1 = {["Hello Frodo!"], [100]}
-autograder2 = {["15", "50"], [50, 50]}
-
-### Tests
-
-Test1 = {"Assignment_1", ["Frodo"]}
-Test2 = {"Assignment_2", ["5", "10"]}
-```
-
-### Loading Configuration
-
-After editing `config.txt`, reload it into the database by visiting:
-`http://127.0.0.1:8000/reload-config`
-
-or restart the web server
 
 ## Project Structure
 
