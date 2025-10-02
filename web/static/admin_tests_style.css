@@ -1,138 +1,22 @@
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .header {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .nav-links {
-            margin: 20px 0;
-        }
-        .nav-links a {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-right: 10px;
-            display: inline-block;
-        }
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .form-group textarea {
-            height: 100px;
-            font-family: monospace;
-            font-size: 14px;
-        }
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            margin-right: 10px;
-        }
-        .btn-primary { background-color: #007bff; color: white; }
-        .btn-success { background-color: #28a745; color: white; }
-        .btn-danger { background-color: #dc3545; color: white; }
-        .btn-warning { background-color: #ffc107; color: black; }
-        .tests-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        .tests-table th, .tests-table td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        .tests-table th {
-            background-color: #f8f9fa;
-        }
-        .json-display {
-            max-width: 200px;
-            max-height: 60px;
-            overflow: auto;
-            font-family: monospace;
-            font-size: 12px;
-            background-color: #f1f3f4;
-            padding: 5px;
-            border-radius: 3px;
-        }
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-        }
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        .alert-danger {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 1000;
-        }
-        .modal-content {
-            background-color: white;
-            margin: 5% auto;
-            padding: 20px;
-            width: 80%;
-            max-width: 600px;
-            border-radius: 10px;
-        }
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .close:hover { color: black; }
-        .json-help {
-            background-color: #e7f3ff;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
+/* Page-specific styles for test management */
+body {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.tests-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.tests-table th, .tests-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.tests-table th {
+    background-color: #f8f9fa;
+}

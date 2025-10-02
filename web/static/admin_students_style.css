@@ -1,144 +1,54 @@
+/* Page-specific styles for student management */
 body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .header {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .logout-btn {
-            background-color: #dc3545;
-            color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 5px;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        .logout-btn:hover {
-            background-color: #c82333;
-        }
-        .admin-badge {
-            background-color: #28a745;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        .nav-links {
-            margin: 20px 0;
-        }
-        .nav-links a {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-right: 10px;
-            display: inline-block;
-        }
-        .nav-links a:hover {
-            background-color: #0056b3;
-        }
-        .content-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .students-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        .students-table th,
-        .students-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        .students-table th {
-            background-color: #f8f9fa;
-            font-weight: bold;
-            color: #333;
-        }
-        .students-table tr:hover {
-            background-color: #f8f9fa;
-        }
-        .grade-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: bold;
-            color: white;
-        }
-        .grade-excellent {
-            background-color: #28a745;
-        }
-        .grade-good {
-            background-color: #17a2b8;
-        }
-        .grade-fair {
-            background-color: #ffc107;
-            color: #333;
-        }
-        .grade-poor {
-            background-color: #dc3545;
-        }
-        .grade-none {
-            background-color: #6c757d;
-        }
-        .submissions-count {
-            background-color: #007bff;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 11px;
-            margin-left: 5px;
-        }
-        .student-details {
-            display: none;
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
-            margin-top: 10px;
-        }
-        .toggle-details {
-            background: none;
-            border: none;
-            color: #007bff;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-        .toggle-details:hover {
-            color: #0056b3;
-        }
-        .submission-item {
-            background: white;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
-            border-left: 4px solid #007bff;
-        }
-        .no-students {
-            text-align: center;
-            color: #6c757d;
-            font-style: italic;
-            padding: 40px;
-        }
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.students-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.submissions-count {
+    background-color: #007bff;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 11px;
+    margin-left: 5px;
+}
+
+.student-details {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+.toggle-details {
+    background-color: #17a2b8;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.toggle-details:hover {
+    background-color: #138496;
+}
+
+.submission-item {
+    padding: 10px;
+    margin: 5px 0;
+    background-color: white;
+    border-radius: 4px;
+    border-left: 3px solid #007bff;
+}
+
+.no-students {
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+}
